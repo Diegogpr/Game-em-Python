@@ -14,6 +14,9 @@ game_over = False
 sound_on = True
 score = 0
 
+enemy_spawn_timer = 0
+enemy_spawn_delay = 0.25 # a cada 0.25 segundos
+
 # --- Classes --- #
 
 class Character:
@@ -92,7 +95,7 @@ class Hero(Character):
 
 class Enemy(Character):
     def __init__(self, idle_imgs, walk_imgs, pos, speed=1.5):
-        super()._init_(idle_imgs, walk_imgs, pos, speed)
+        super().__init__(idle_imgs, walk_imgs, pos, speed)
         self.health = 1
 
     def update(self, dt, hero_pos):
@@ -153,12 +156,19 @@ def update(dt):
         if hero.is_attacking and hero.actor.colliderect(enemy.actor):
             enemies.remove(enemy)
             global score
-            score += 1
+            score += 1  
             if sound_on:
                 sounds.hit.play()
         elif hero.actor.colliderect(enemy.actor) and hero.invulnerable <= 0:
             hero.take_damage()
-
+            
+    # Spawn de inimigos ao longo do tempo
+    global enemy_spawn_timer
+    enemy_spawn_timer -= dt
+    if enemy_spawn_timer <= 0:
+        spawn_enemy()
+        enemy_spawn_timer = enemy_spawn_delay
+    
     check_game_over()
 
 def draw_ui():
@@ -177,7 +187,6 @@ def reset_game():
     game_over = False
     score = 0
     enemies = []
-    global hero
     hero.health = 3
     hero.invulnerable = 0
     hero.is_attacking = False
@@ -188,6 +197,12 @@ def reset_game():
         y = random.randint(50, HEIGHT - 50)
         enemy = Enemy(enemy_idle_imgs, enemy_walk_imgs, (x, y))
         enemies.append(enemy)
+
+def spawn_enemy():
+    x = random.randint(50, WIDTH - 50)
+    y = random.randint(50, HEIGHT - 50)
+    enemy = Enemy(enemy_idle_imgs, enemy_walk_imgs, (x, y))
+    enemies.append(enemy)
 
 def check_game_over():
     global game_over
